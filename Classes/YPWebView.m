@@ -84,6 +84,12 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     return self;
 }
 
+-(void)dealloc{
+    if (_VERSION_ABOVE_IOS_8) {
+        [self.wkWebView removeObserver:self forKeyPath:NSStringFromSelector(@selector(estimatedProgress))];
+    }
+}
+
 
 -(void)layoutSubviews{
     [super layoutSubviews];
