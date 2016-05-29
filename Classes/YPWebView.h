@@ -28,6 +28,8 @@
 
 @property(nonatomic,weak) id<YPWebViewDelegate> delegate;
 
+@property(nonatomic,strong) NSString *localFileDirectory;      //Default 'www'
+
 #pragma mark - WKWebView Delegate Methods
 //@property(nonatomic,weak) id<WKNavigationDelegate> wkNavigationDelegate;
 //@property(nonatomic,weak) id<WKUIDelegate> wkUIDelegate;
@@ -51,6 +53,13 @@
 
 -(void)loadHTMLString:(NSString *)string baseURL:(NSURL *)baseURL;
 
+/**
+ *  加载本地的HTML文件
+ *
+ *  @param filePath 本地文件路径
+ *  @param basePath 本地文件目录
+ */
+-(void)loadFilePath:(NSString *)filePath baseFilePath:(NSString *)basePath;
 
 -(void)evaluteJavaScriptString:(NSString *)scriptString completionHandler:(void (^)(id result, NSError *error))completionHandler;
 

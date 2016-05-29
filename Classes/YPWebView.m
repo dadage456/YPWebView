@@ -31,6 +31,8 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         
         self.backgroundColor = [UIColor whiteColor];
         
+        self.localFileDirectory = @"www";   //默认的html资源存放文件夹
+        
         if ([WKWebView class]) {
             _VERSION_ABOVE_IOS_8 = YES;
         }else{
@@ -84,12 +86,6 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     return self;
 }
 
--(void)dealloc{
-    if (_VERSION_ABOVE_IOS_8) {
-        [self.wkWebView removeObserver:self forKeyPath:NSStringFromSelector(@selector(estimatedProgress))];
-    }
-}
-
 
 -(void)layoutSubviews{
     [super layoutSubviews];
@@ -118,6 +114,50 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         [self.wkWebView loadHTMLString:string baseURL:baseURL];
     }else{
         [self.uiWebView loadHTMLString:string baseURL:baseURL];
+    }
+}
+
+/**
+ *  加载本地的HTML文件
+ *
+ *  @param filePath 本地文件路径
+ *  @param basePath 本地文件目录
+ */
+-(void)loadFilePath:(NSString *)filePath baseFilePath:(NSString *)basePath{
+    
+    NSURL *filePathURL = [NSURL fileURLWithPath:filePath];
+    NSURL *basePathURL = [NSURL fileURLWithPath:basePath];
+    
+    
+    if (_VERSION_ABOVE_IOS_8) {
+
+        if ([self.wkWebView respondsToSelector:@selector(loadFileURL:allowingReadAccessToURL:)]) {
+            [self.wkWebView loadFileURL:filePathURL allowingReadAccessToURL:basePathURL];
+        }else{
+            //将html资源文件夹拷贝到tmp文件夹中
+            [self copyBundleResouceToTempDirectory:_localFileDirectory];
+            
+            NSString *bundleDirPath = [[NSBundle mainBundle] bundlePath];
+            NSString *tempDirPath = NSTemporaryDirectory();
+            
+            NSString *newFilePath  = [filePath stringByReplacingOccurrencesOfString:bundleDirPath withString:tempDirPath];
+            NSString *baseURLPath = [basePath stringByReplacingOccurrencesOfString:bundleDirPath withString:tempDirPath];
+            
+            NSString *htmlStr = [NSString stringWithContentsOfFile:newFilePath encoding:NSUTF8StringEncoding error:nil];
+            [self.wkWebView loadHTMLString:htmlStr baseURL:[NSURL fileURLWithPath:baseURLPath]];
+        }
+    }else{
+        NSString *htmlStr = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+        
+        [self.uiWebView loadHTMLString:htmlStr baseURL:basePathURL];
+        
+        /**
+         *  加载本地网页，无需进度提示
+         */
+        self.progress = 1;
+        if ([self.delegate respondsToSelector:@selector(YPwebview:loadProgress:)]) {
+            [self.delegate YPwebview:self loadProgress:self.progress];
+        }
     }
 }
 
@@ -400,7 +440,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     }]];
     
     [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
-        if (defaultText!=nil && ![defaultText isEqualToString:@""]) {
+        if ([GlobalUtil isNotEmptyString:defaultText]) {
             textField.text = defaultText;
         }
     }];
@@ -546,6 +586,8 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         type==UIWebViewNavigationTypeLinkClicked) {
         
         [_backList addObject:currentURL];
+        
+        LogDebug(@"***************add Back List : %@",_backList);
     }
 }
 
@@ -568,7 +610,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
  */
 -(void)customGoBack{
     
-    NSUInteger count = [_backList count];
+    NSInteger count = [_backList count];
     
     if (count>0) {
         NSURL *backRequestURL = [_backList lastObject];
@@ -583,7 +625,51 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         [_backList removeLastObject];
     }
     
+    LogDebug(@"***********back History Operation,List:%@",_backList);
 }
 
+
+#pragma mark - Local File Resource Directory Operation
+
+/**
+ *  拷贝本地文件和资源到temp文件夹
+ *
+ *  @param directoryName
+ */
+-(void)copyBundleResouceToTempDirectory:(NSString *)directoryName{
+    
+    NSString *tempDirectoryPath = NSTemporaryDirectory();
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    NSString *resourceDirectory = [tempDirectoryPath stringByAppendingPathComponent:directoryName];
+    
+    
+    NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+    NSString *bundleDirectory = [bundlePath stringByAppendingPathComponent:directoryName];
+    
+    //判断是否已经存在该文件夹
+    BOOL isDir = NO;
+    BOOL isExist = [fileManager fileExistsAtPath:resourceDirectory isDirectory:&isDir];
+    if (!(isExist && isDir)) {
+        //创建文件夹
+        BOOL createDir = [fileManager createDirectoryAtPath:resourceDirectory withIntermediateDirectories:YES attributes:nil error:nil];
+        
+        if (createDir) {
+            //开始复制文件
+            
+            NSArray *fileNameArray = [fileManager contentsOfDirectoryAtPath:bundleDirectory error:nil];
+            
+            for (NSString *fileName in fileNameArray) {
+                
+                NSString *filePath = [bundleDirectory stringByAppendingPathComponent:fileName];
+                NSString *newFilePath = [resourceDirectory stringByAppendingPathComponent:fileName];
+                
+                [fileManager copyItemAtPath:filePath toPath:newFilePath error:nil];
+            }
+        }
+        
+    }
+    
+}
 
 @end
