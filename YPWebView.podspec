@@ -55,7 +55,7 @@ Pod::Spec.new do |s|
   s.author             = { "GaotangZhang" => "dadage456@163.com" }
   # Or just: s.author    = ""
   # s.authors            = { "" => "" }
-  s.social_media_url   = "http://blog.yuanpower.me/"
+  s.social_media_url   = "https://github.com/dadage456"
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
@@ -117,7 +117,8 @@ Pod::Spec.new do |s|
   #
 
   # s.framework  = "SomeFramework"
-   s.frameworks = "JavaScriptCore", "WebKit"
+#s.frameworks = 'JavaScriptCore", "WebKit"
+ s.frameworks = 'JavaScriptCore', 'WebKit'
 
   # s.library   = "iconv"
   # s.libraries = "iconv", "xml2"

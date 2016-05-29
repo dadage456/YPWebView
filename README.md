@@ -1,5 +1,16 @@
-# YPWebView
+# YPWebView 简介
 混合UIWebView和WKWebView,根据系统自动选择控件。
+
+#### 1、用到的Framework
+* WebKit.framework
+* JavaScriptCore.framework
+
+#### 2、安装方式:使用Cocoaspod安装
+
+```
+	pod 'YPWebView'
+```
+
 
 ---
 
@@ -14,6 +25,7 @@
   * 默认实现了WKWebView UIDelegate委托事件，实现弹出提示框、确认框、输入框。
   
 ---
+
 
 ## YPWebView 使用
 

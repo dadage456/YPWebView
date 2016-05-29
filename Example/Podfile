@@ -1,11 +1,5 @@
-use_frameworks!
 
 target 'YPWebView_Example' do
   pod 'YPWebView', :path => '../'
 
-  target 'YPWebView_Tests' do
-    inherit! :search_paths
-
-    
-  end
 end

@@ -440,7 +440,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     }]];
     
     [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
-        if ([GlobalUtil isNotEmptyString:defaultText]) {
+        if (defaultText != nil && ![defaultText isEqual:@""]) {
             textField.text = defaultText;
         }
     }];
@@ -587,7 +587,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         
         [_backList addObject:currentURL];
         
-        LogDebug(@"***************add Back List : %@",_backList);
+        NSLog(@"***************add Back List : %@",_backList);
     }
 }
 
@@ -625,7 +625,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         [_backList removeLastObject];
     }
     
-    LogDebug(@"***********back History Operation,List:%@",_backList);
+    NSLog(@"***********back History Operation,List:%@",_backList);
 }
 
 
