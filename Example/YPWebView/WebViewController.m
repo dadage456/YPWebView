@@ -10,7 +10,10 @@
 
 #import "NJKWebViewProgressView.h"
 
-@interface WebViewController ()
+#define HEIGHT_NAVIGATION_BAR 44.0f
+
+@interface WebViewController ()<YPWebViewDelegate>
+
 @property(nonatomic,strong) NJKWebViewProgressView *progressView;
 
 @end
@@ -37,6 +40,8 @@
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     
+    [self loadWebView];
+    
     [self showProgressView];
 }
 
@@ -51,15 +56,22 @@
     // Dispose of any resources that can be recreated.
 }
 
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+#pragma mark - Public Methods
+/**
+ *  加载网页
+ */
+-(void)loadWebView{
+    
+    if (self.url) {
+        NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:_url]];
+        
+        [self.webview loadRequest:request];
+    }else if (self.filePath){
+        
+        [self.webview loadFilePath:self.filePath baseFilePath:self.basePath];
+    }
+    
 }
-*/
 
 /**
  *  初始化布局webview
@@ -93,7 +105,7 @@
 
 
 
-#pragma mark - Private Methods
+#pragma mark - Progress View Methods
 /*
  * 显示进度条
  */
@@ -101,19 +113,17 @@
     
     CGFloat progressBarHeight = 2.f;
     
-    if (!self.navigationController.navigationBarHidden) {
+    if (!_progressView) {
+        _progressView = [[NJKWebViewProgressView alloc] init];
+    }
+    
+    if (self.navigationController && !self.navigationController.navigationBarHidden) {
+        //导航条上显示进度条
         CGRect navigationBarBounds = self.navigationController.navigationBar.bounds;
-        CGRect progressFrame = CGRectMake(0, 0, navigationBarBounds.size.width, progressBarHeight);
+        CGRect progressFrame = CGRectMake(0, 44-progressBarHeight , navigationBarBounds.size.width, progressBarHeight);
         _progressView.frame = progressFrame;
         
         [self.navigationController.navigationBar addSubview:_progressView];
-    }else{
-        
-        CGRect progressFrame = CGRectMake(0, 0, CGRectGetWidth(self.view.frame), progressBarHeight);
-        
-        _progressView.frame = progressFrame;
-        
-        [self.view addSubview:_progressView];
     }
     
     [_progressView setProgress:0.0];
@@ -125,6 +135,9 @@
 -(void)hideProgressView{
     [_progressView removeFromSuperview];
 }
+
+
+#pragma mark - URL Heloper Methods
 
 /*
  * 打开外部URL,调用电话、mail,sms
@@ -165,9 +178,7 @@
     
     BOOL allow = YES;
     
-    
     NSLog(@"------current request url:%@",request.URL);
-    
     
     allow = ![self canHandleOpenURL:request.URL];   //外部URL处理
     
@@ -184,6 +195,11 @@
 
 -(void)YPwebviewDidFinishLoad:(YPWebView *)webview{
     NSLog(@"%s",__func__);
+    
+    /**
+     *  js 调用原生程序
+     */
+    [webview evaluteJavaScriptString:@"window.webkit.messageHandlers.YP_hdk.postMessage({test:'test1'})" completionHandler:nil];
 }
 
 -(void)YPwebview:(YPWebView *)webview didLoadFailedWithError:(NSError *)error{
@@ -192,7 +208,6 @@
     if (error.code == NSURLErrorCancelled || error.code == 102) {
         return;
     }
-    
     
     NSLog(@"load request error:%@",error);
 }
@@ -204,6 +219,12 @@
     [self.progressView setProgress:progress animated:YES];
 }
 
-
+/**
+ *  接收js发送的消息
+ *
+ */
+-(void)YPwebview:(YPWebView *)webview receiveScriptMessage:(NSDictionary *)message{
+    NSLog(@"receive script message:%@",message);
+}
 
 @end

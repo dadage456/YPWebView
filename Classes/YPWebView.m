@@ -9,14 +9,18 @@
 #import "YPWebView.h"
 #import "NJKWebViewProgress.h"
 
+#define SCRIPT_MESSAGE_HANDLER_NAME @"YP_hdk"
+
 static void *KINWebBrowserContext = &KINWebBrowserContext;
 
-@interface YPWebView ()<NJKWebViewProgressDelegate>{
+@interface YPWebView ()<NJKWebViewProgressDelegate,WKScriptMessageHandler>{
     NSMutableArray *_backList;
 }
 
 @property(nonatomic,strong) WKWebViewConfiguration *configuration;
 @property(nonatomic,strong) NJKWebViewProgress *progressProxy;
+
+@property(nonatomic,strong) JSContext *jscontext;
 
 @end
 
@@ -34,18 +38,26 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         self.localFileDirectory = @"www";   //默认的html资源存放文件夹
         
         if ([WKWebView class]) {
-            _VERSION_ABOVE_IOS_8 = YES;
+            _VERSION_ABOVE_IOS_8 = NO;
         }else{
             _VERSION_ABOVE_IOS_8 = NO;
         }
         
         if (_VERSION_ABOVE_IOS_8) {
             
-            if (self.configuration) {
-                self.wkWebView = [[WKWebView alloc] initWithFrame:self.bounds configuration:self.configuration];
-            }else{
-                self.wkWebView = [[WKWebView alloc] initWithFrame:self.bounds];
+            if (!self.configuration) {
+                self.configuration = [[WKWebViewConfiguration alloc] init];
             }
+            
+            if (!self.configuration.userContentController) {
+                self.configuration.userContentController = [[WKUserContentController alloc] init];
+            }
+            
+            //add js script Handler
+            [self.configuration.userContentController addScriptMessageHandler:self name:SCRIPT_MESSAGE_HANDLER_NAME];
+            
+            self.wkWebView = [[WKWebView alloc] initWithFrame:self.bounds configuration:self.configuration];
+            
             
             self.wkWebView.backgroundColor = [UIColor clearColor];
             self.wkWebView.navigationDelegate = self;
@@ -84,6 +96,15 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     self  = [self initWithFrame:frame];
     
     return self;
+}
+
+-(void)dealloc{
+    
+    if (_VERSION_ABOVE_IOS_8){
+        //remove KVO
+        [self.wkWebView removeObserver:self forKeyPath:NSStringFromSelector(@selector(estimatedProgress))];
+    }
+    
 }
 
 
@@ -297,12 +318,18 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
 }
 
 - (void)webViewDidStartLoad:(UIWebView *)webView{
+    
     if ([self.delegate respondsToSelector:@selector(YPwebviewDidStartLoad:)]) {
         [self.delegate YPwebviewDidStartLoad:self];
     }
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView{
+    
+    /**
+     *  绑定jsContext ，消息转发
+     */
+    [self bindingContextForMessageHandler];
     
     //可执行javascript脚本
     NSString *readyState = [webView stringByEvaluatingJavaScriptFromString:@"document.readyState"];
@@ -315,6 +342,11 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     //加载完成
     if ([self.delegate respondsToSelector:@selector(YPwebviewDidFinishLoad:)]) {
         [self.delegate YPwebviewDidFinishLoad:self];
+    }
+    
+    //本地文件，加载进度优化
+    if ([webView.request.URL.scheme isEqual:@"file"] && [self.delegate respondsToSelector:@selector(YPwebview:loadProgress:)]) {
+        [self.delegate YPwebview:self loadProgress:1.0];
     }
 }
 
@@ -364,6 +396,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     if ([self.delegate respondsToSelector:@selector(YPwebviewDidFinishLoad:)]) {
         [self.delegate YPwebviewDidFinishLoad:self];
     }
+    
 }
 
 -(void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error{
@@ -450,6 +483,53 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     }
 }
 
+
+#pragma mark - WKScriptMessageHandler delegate
+
+- (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message{
+    
+    if ([self.delegate  respondsToSelector:@selector(YPwebview:receiveScriptMessage:)]) {
+
+        [self.delegate YPwebview:self receiveScriptMessage:message.body];
+
+    }
+    
+}
+
+#pragma mark - Binding JsContext MessageHandler
+
+/**
+ * 绑定jsContext,消息转发
+ * js端通过 window.webkit.messageHandlers.hdk.postMessage(param); 发送消息
+ */
+-(void)bindingContextForMessageHandler{
+    
+    if (!_jscontext) {
+        _jscontext = [self.uiWebView valueForKeyPath:@"documentView.webView.mainFrame.javaScriptContext"];
+        
+        [_jscontext setExceptionHandler:^(JSContext *context, JSValue *value) {
+            context.exception = value;
+            NSLog(@"JSContext Exception:%@",value);
+        }];
+    }
+
+    
+    if (![_jscontext[@"webkit"] toObject]) {
+        
+        __weak typeof(self) _weakSelf = self;
+        
+        NSString *defineHandleJS = [NSString stringWithFormat:@"webkit = {messageHandlers:{%@:{}}}",SCRIPT_MESSAGE_HANDLER_NAME];
+        
+        [_jscontext evaluateScript:defineHandleJS];
+        
+        _jscontext[@"webkit"][@"messageHandlers"][SCRIPT_MESSAGE_HANDLER_NAME][@"postMessage"] = ^(NSDictionary *params){
+            if ([_weakSelf.delegate respondsToSelector:@selector(YPwebview:receiveScriptMessage:)]) {
+                [_weakSelf.delegate YPwebview:_weakSelf receiveScriptMessage:params];
+            }
+        };
+    }
+    
+}
 
 #pragma mark - Private URL Request Helper Method
 /*
@@ -670,6 +750,26 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         
     }
     
+}
+
+
+#pragma mark - 清除浏览器缓存
++(void)clearWebViewCache{
+    if ([WKWebView class]) {
+        NSSet *websiteDataTypes
+        = [NSSet setWithArray:@[
+                                WKWebsiteDataTypeDiskCache,
+                                WKWebsiteDataTypeMemoryCache
+                                ]];
+        //// Date from
+        NSDate *dateFrom = [NSDate dateWithTimeIntervalSince1970:0];
+        //// Execute
+        [[WKWebsiteDataStore defaultDataStore] removeDataOfTypes:websiteDataTypes modifiedSince:dateFrom completionHandler:^{
+            // Done
+        }];
+    }else{
+        [[NSURLCache sharedURLCache] removeAllCachedResponses];
+    }
 }
 
 @end

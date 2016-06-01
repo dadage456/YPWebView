@@ -32,10 +32,23 @@
     
     if (tag == 0) {
         //打开远程URL
+        WebViewController  *controller = [[WebViewController alloc] init];
+        
+        controller.url = @"http://m.taobao.com";
+        
+        [self.navigationController pushViewController:controller animated:YES];
         
     }else if(tag == 1){
         //打开本地URL
+        WebViewController *controller = [[WebViewController alloc] init];
         
+        NSString *filePath = [[NSBundle mainBundle] pathForResource:@"about" ofType:@"html" inDirectory:@"www"];
+        NSString *basePath = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"www"];
+        
+        controller.filePath = filePath;
+        controller.basePath = basePath;
+        
+        [self.navigationController pushViewController:controller animated:YES];
     }
 }
 

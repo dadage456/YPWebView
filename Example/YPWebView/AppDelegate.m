@@ -8,11 +8,23 @@
 
 #import "AppDelegate.h"
 
+#import "WebViewController.h"
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
+//    self.window = [[UIWindow alloc] init];
+//    
+//    WebViewController *webController = [[WebViewController alloc] init];
+//    webController.url = @"http://223.71.241.125:8081/m/item/6.html";
+//    
+//    self.window.rootViewController = webController;
+//    
+//    [self.window makeKeyAndVisible];
+    
     return YES;
 }
 

@@ -109,6 +109,12 @@
  */
 -(void)YPwebview:(YPWebView *)webview loadProgress:(double)progress;
 
+/**
+ *  接受js端发送的消息
+＊        js端通过 window.webkit.messageHandlers.hdk.postMessage(param); 发送消息
+ */
+-(void)YPwebview:(YPWebView *)webview receiveScriptMessage:(NSDictionary *)message ;
+
 
 #pragma mark - 清除浏览器缓存
 +(void)clearWebViewCache;

@@ -14,4 +14,12 @@
 
 @property(nonatomic,strong) YPWebView *webview;
 
+@property(nonatomic,strong) NSString *url;
+
+@property(nonatomic,strong) NSString *filePath;
+
+@property(nonatomic,strong) NSString *basePath;
+
+-(void)loadWebView;
+
 @end
