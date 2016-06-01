@@ -11,18 +11,24 @@
 	pod 'YPWebView'
 ```
 
-
 ---
 
 ## YPWebView特性
 
-  * 在IOS7下使用UIWebView控件，在IOS8以上版本使用WKWebView控件。
+  * YPWebView支持 IOS 7 以上的系统。
   
-  * 优化的历史后退操作，针对APP访问网页的后退优化操作。设置customBackAction = YES
+  * 在IOS7下使用UIWebView控件与JavascriptCore，在IOS8以上版本使用WKWebView控件。
+  
+  * 优化的历史后退操作，针对APP访问网页的后退优化操作。(忽略页内跳转、post请求...)
+  
+  	`customBackAction = YES`
   
   * 整合了UIWebView 与 WKWebView 的委托事件。
   
   * 默认实现了WKWebView UIDelegate委托事件，实现弹出提示框、确认框、输入框。
+  
+  * 统一了UIWebView 与 WKWebview 调用原生程序的方式。  
+    `window.webkit.messageHandlers.YP_hdk.postMessage({name:'value'})`
   
 ---
 
@@ -60,6 +66,7 @@
   @end
   ```
 	
+---
 
 ### 二、请求网页
 * 1、加载远程URLRequest: `-loadRequest: `
@@ -69,4 +76,14 @@
 * 3、加载本地的HTML文件： `-loadFilePath:baseFilePath: `  
 		**解决了在IOS8以上，UIWebView与WKWebView加载本地HTML文件不显示本地资源(css、图片、js文件).**
 		
+		
+---
+
+### 三、JS调用原生程序
+
+>YPWebView 统一了UIWebView 与 WKWebview 的 js 调用原生程序的方式。
+
+1. js通过执行`window.webkit.messageHandlers.YP_hdk.postMessage({name:'value'})`发送消息给原生程序。。
+
+2. 原生程序实现YPWebviewDelegate的`-YPwebview:receiveScriptMessage`方法，获取js发送过来的数据，进行处理。
   

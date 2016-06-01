@@ -43,6 +43,7 @@
     [self loadWebView];
     
     [self showProgressView];
+    
 }
 
 -(void)viewWillDisappear:(BOOL)animated{
@@ -57,6 +58,7 @@
 }
 
 #pragma mark - Public Methods
+
 /**
  *  加载网页
  */
