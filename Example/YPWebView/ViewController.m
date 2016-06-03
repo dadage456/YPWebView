@@ -34,7 +34,7 @@
         //打开远程URL
         WebViewController  *controller = [[WebViewController alloc] init];
         
-        controller.url = @"http://m.taobao.com";
+        controller.url = @"http://d.eqxiu.com/s/oNPt4BQD";
         
         [self.navigationController pushViewController:controller animated:YES];
         

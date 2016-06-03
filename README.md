@@ -27,6 +27,8 @@
   
   * 默认实现了WKWebView UIDelegate委托事件，实现弹出提示框、确认框、输入框。
   
+  * 解决了WKWebView网页内执行JS window.open无响应。([解决方案](http://stackoverflow.com/questions/33190234/wkwebview-and-window-open))
+  
   * 统一了UIWebView 与 WKWebview 调用原生程序的方式。  
     `window.webkit.messageHandlers.YP_hdk.postMessage({name:'value'})`
   

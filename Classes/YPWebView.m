@@ -352,7 +352,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(nullable NSError *)error{
     
-    if (error && [self.delegate respondsToSelector:@selector(YPwebview:didLoadFailedWithError:)]) {
+    if (error && error.code != NSURLErrorCancelled && error.code != 102 && [self.delegate respondsToSelector:@selector(YPwebview:didLoadFailedWithError:)]) {
         [self.delegate YPwebview:self didLoadFailedWithError:error];
     }
 }
@@ -401,14 +401,14 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
 
 -(void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error{
     
-    if (error && [self.delegate respondsToSelector:@selector(YPwebview:didLoadFailedWithError:)]) {
+    if (error  && error.code != NSURLErrorCancelled && [self.delegate respondsToSelector:@selector(YPwebview:didLoadFailedWithError:)]) {
         [self.delegate YPwebview:self didLoadFailedWithError:error];
     }
     
 }
 
 -(void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error{
-    if (error && [self.delegate respondsToSelector:@selector(YPwebview:didLoadFailedWithError:)]) {
+    if (error  && error.code != NSURLErrorCancelled && [self.delegate respondsToSelector:@selector(YPwebview:didLoadFailedWithError:)]) {
         
         [self.delegate YPwebview:self didLoadFailedWithError:error];
         
@@ -481,6 +481,14 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
     if (self.wkUIDelegateViewController) {
         [self.wkUIDelegateViewController presentViewController:alertController animated:YES completion:nil];
     }
+}
+
+- (nullable WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures{
+    
+    [webView loadRequest:navigationAction.request];
+    
+    return nil;
+    
 }
 
 

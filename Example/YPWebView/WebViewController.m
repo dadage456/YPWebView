@@ -202,6 +202,8 @@
      *  js 调用原生程序
      */
     [webview evaluteJavaScriptString:@"window.webkit.messageHandlers.YP_hdk.postMessage({test:'test1'})" completionHandler:nil];
+    
+    [webview evaluteJavaScriptString:@"window.open(url){alert(url);}" completionHandler:nil];
 }
 
 -(void)YPwebview:(YPWebView *)webview didLoadFailedWithError:(NSError *)error{
