@@ -38,7 +38,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
         self.localFileDirectory = @"www";   //默认的html资源存放文件夹
         
         if ([WKWebView class]) {
-            _VERSION_ABOVE_IOS_8 = NO;
+            _VERSION_ABOVE_IOS_8 = YES;
         }else{
             _VERSION_ABOVE_IOS_8 = NO;
         }
