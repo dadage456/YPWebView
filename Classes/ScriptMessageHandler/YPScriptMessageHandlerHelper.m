@@ -6,9 +6,9 @@
 //
 //
 
-#import "ScriptMessageHandlerHelper.h"
+#import "YPScriptMessageHandlerHelper.h"
 
-@implementation ScriptMessageHandlerHelper
+@implementation YPScriptMessageHandlerHelper
 
 -(instancetype)initWithDelegate:(id<WKScriptMessageHandler>)delegate{
     self = [super init];

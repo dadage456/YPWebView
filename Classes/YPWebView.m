@@ -8,7 +8,6 @@
 
 #import "YPWebView.h"
 #import "NJKWebViewProgress.h"
-#import "ScriptMessageHandlerHelper.h"
 
 #define SCRIPT_MESSAGE_HANDLER_NAME @"YP_hdk"
 
@@ -55,7 +54,7 @@ static void *KINWebBrowserContext = &KINWebBrowserContext;
             }
             
             //add js script Handler
-            [self.configuration.userContentController addScriptMessageHandler:[[ScriptMessageHandlerHelper alloc] initWithDelegate:self] name:SCRIPT_MESSAGE_HANDLER_NAME];
+            [self.configuration.userContentController addScriptMessageHandler:[[YPScriptMessageHandlerHelper alloc] initWithDelegate:self] name:SCRIPT_MESSAGE_HANDLER_NAME];
             
             self.wkWebView = [[WKWebView alloc] initWithFrame:self.bounds configuration:self.configuration];
             

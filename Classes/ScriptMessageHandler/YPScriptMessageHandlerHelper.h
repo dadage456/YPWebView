@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <WebKit/WebKit.h>
 
-@interface ScriptMessageHandlerHelper : NSObject<WKScriptMessageHandler>
+@interface YPScriptMessageHandlerHelper : NSObject<WKScriptMessageHandler>
 
 @property(nonatomic,weak) id<WKScriptMessageHandler> delegate;
 
