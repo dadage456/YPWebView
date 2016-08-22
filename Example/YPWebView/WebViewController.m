@@ -151,8 +151,10 @@
     BOOL _canOpen = [[UIApplication sharedApplication] canOpenURL:url];
     
     if (_canOpen && ![self isHTTPRequest:url] && ![url.scheme isEqualToString:@"file"]) {
+        
         [[UIApplication sharedApplication] openURL:url];
         _canHandle = YES;
+        
     }
     
     return _canHandle;
